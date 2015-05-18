@@ -20,6 +20,7 @@ module Bosh::Spec
           vm_data[:state],
           vm_data[:cid],
           vm_data[:agent_id],
+          vm_data[:ips],
           File.join(@agents_base_dir, "agent-base-dir-#{vm_data[:agent_id]}"),
           @director_nats_port,
           @logger,
@@ -82,6 +83,10 @@ module Bosh::Spec
     end
 
     private
+
+    def vms_details(deployment_name)
+      parse_table(@runner.run("vms #{deployment_name} --details"))
+    end
 
     def parse_table(output)
       rows = []
