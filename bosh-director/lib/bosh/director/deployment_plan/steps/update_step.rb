@@ -37,11 +37,9 @@ module Bosh::Director
           delete_unneeded_instances
 
           @logger.info('Updating resource pools')
+          # this just creates vms that don't exist yet for @deployment_plan.jobs_starting_on_deploy
           @resource_pools.update
           @base_job.task_checkpoint
-
-          @logger.info('Binding instance VMs')
-          bind_instance_vms
 
           @event_log.begin_stage('Preparing configuration', 1)
           @base_job.track_and_log('Binding configuration') do
@@ -59,14 +57,6 @@ module Bosh::Director
         end
 
         private
-
-        def bind_instance_vms
-          jobs = @deployment_plan.jobs_starting_on_deploy
-          instances = jobs.map(&:instances).flatten
-
-          binder = DeploymentPlan::InstanceVmBinder.new(@event_log)
-          binder.bind_instance_vms(instances)
-        end
 
         def delete_unneeded_vms
           unneeded_vms = @deployment_plan.unneeded_vms
