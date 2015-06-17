@@ -547,7 +547,7 @@ module Bosh::Director
         allow(config).to receive_messages(workers: 2)
         config
       end
-      let(:deployment_plan) { double('Bosh::Director::DeploymentPlan', compilation: compilation, model: 'model') }
+      let(:deployment_plan) { double('Bosh::Director::DeploymentPlan', compilation: compilation, model: 'model', name: 'foo') }
       let(:stemcell) { Models::Stemcell.make }
       let(:vm) { Models::Vm.make }
       let(:vm_data) { instance_double('Bosh::Director::VmData', vm: vm) }
@@ -590,20 +590,19 @@ module Bosh::Director
           Bosh::Director::Config.trusted_certs=DIRECTOR_TEST_CERTS
           allow(VmCreator).to receive_messages(create: vm)
           allow(AgentClient).to receive_messages(with_defaults: client)
+          allow(client).to receive(:apply)
           allow(@cloud).to receive(:delete_vm)
-          allow(vm_data).to receive(:release)
 
           allow(compilation).to receive_messages(reuse_compilation_vms: true)
 
           allow(compiler).to receive_messages(reserve_network: double('network_reservation'))
           allow(compiler).to receive(:tear_down_vm)
-          allow(compiler).to receive(:configure_vm)
 
           allow(client).to receive(:update_settings)
           allow(client).to receive(:wait_until_ready)
         end
 
-        it 'should update the database with the new VM''s trusted certs' do
+        it 'should update the database with the new VMs trusted certs' do
           compiler.prepare_vm(stemcell) {
             # prepare_vm needs a block. so here it is.
           }
@@ -614,7 +613,7 @@ module Bosh::Director
           expect(client).to receive(:wait_until_ready).and_raise(RpcTimeout)
 
           begin
-            compiler.prepare_vm(stemcell)
+            compiler.prepare_vm(stemcell) {}
           rescue RpcTimeout
             #
           end
@@ -626,7 +625,7 @@ module Bosh::Director
           expect(client).to receive(:update_settings).and_raise(RpcTimeout)
 
           begin
-            compiler.prepare_vm(stemcell)
+            compiler.prepare_vm(stemcell) {}
           rescue RpcTimeout
             # expected
           end
