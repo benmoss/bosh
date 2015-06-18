@@ -1,11 +1,21 @@
 ---
+groups:
+  - name: bosh-global-net
+    jobs:
+      - unit-1.9
+      - unit-2.1
+      - integration-1.9-mysql
+      - integration-1.9-postgres
+      - integration-2.1-mysql
+      - integration-2.1-postgres
+
 jobs:
   - name: unit-1.9
     public: true
     serial: true
     plan:
-      - get: bosh-src
-        trigger: true
+      - {trigger: true, get: bosh-src}
+
       - task: test
         file: bosh-src/ci/tasks/test-unit.yml
         config:
@@ -16,22 +26,20 @@ jobs:
     public: true
     serial: true
     plan:
-      - get: bosh-src
-        trigger: true
+      - {trigger: true, get: bosh-src}
+
       - task: test
-        file: bosh-src/ci/tasks/test-unit-coverage.yml
+        file: bosh-src/ci/tasks/test-unit.yml
         config:
           params:
             RUBY_VERSION: 2.1.6
-            CODECLIMATE_REPO_TOKEN: {{codeclimate_token}}
 
-  - name: integration-mysql-1.9
+  - name: integration-1.9-mysql
     public: true
     serial: true
     plan:
-      - get: bosh-src
-        passed: [unit-1.9, unit-2.1]
-        trigger: true
+      - {trigger: true, passed: [unit-1.9], get: bosh-src}
+
       - task: test
         privileged: true
         file: bosh-src/ci/tasks/test-integration.yml
@@ -40,28 +48,12 @@ jobs:
             DB:           mysql
             RUBY_VERSION: 1.9.3
 
-  - name: integration-mysql-2.1
+  - name: integration-1.9-postgres
     public: true
     serial: true
     plan:
-      - get: bosh-src
-        passed: [unit-1.9, unit-2.1]
-        trigger: true
-      - task: test
-        privileged: true
-        file: bosh-src/ci/tasks/test-integration.yml
-        config:
-          params:
-            DB:           mysql
-            RUBY_VERSION: 2.1.6
+      - {trigger: true, passed: [unit-1.9], get: bosh-src}
 
-  - name: integration-postgres-1.9
-    public: true
-    serial: true
-    plan:
-      - get: bosh-src
-        passed: [unit-1.9, unit-2.1]
-        trigger: true
       - task: test
         privileged: true
         file:  bosh-src/ci/tasks/test-integration.yml
@@ -70,13 +62,26 @@ jobs:
             DB:           postgresql
             RUBY_VERSION: 1.9.3
 
-  - name: integration-postgres-2.1
+  - name: integration-2.1-mysql
     public: true
     serial: true
     plan:
-      - get: bosh-src
-        passed: [unit-1.9, unit-2.1]
-        trigger: true
+      - {trigger: true, passed: [unit-2.1], get: bosh-src}
+
+      - task: test
+        privileged: true
+        file: bosh-src/ci/tasks/test-integration.yml
+        config:
+          params:
+            DB:           mysql
+            RUBY_VERSION: 2.1.6
+
+  - name: integration-2.1-postgres
+    public: true
+    serial: true
+    plan:
+      - {trigger: true, passed: [unit-2.1], get: bosh-src}
+
       - task: test
         privileged: true
         file: bosh-src/ci/tasks/test-integration.yml
